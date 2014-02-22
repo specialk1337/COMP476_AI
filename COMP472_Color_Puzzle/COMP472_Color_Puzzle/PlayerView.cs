@@ -51,6 +51,7 @@ namespace COMP472_Color_Puzzle
             Console.Clear();
             Console.WriteLine("You won! it took you {0} moves", _command.getMoveCount());
             _command.Draw();
+            Console.WriteLine("You won! it took you {0} moves", _command.getMoveCount());
             Console.ReadKey();
             
         }
