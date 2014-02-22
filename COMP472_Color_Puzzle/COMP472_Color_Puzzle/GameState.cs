@@ -13,11 +13,16 @@ namespace COMP472_Color_Puzzle
         //List<KeyValuePair<int, char>> TheBoard = new List<KeyValuePair<int, char>>();
         //Dictionary<int, char> TheBoard = new Dictionary<int, char>();
         List<char> TheBoard = new List<char>();
+        private List<char> MoveHistory = new List<char>();
         public int moveCounter { get; private set; }
         public int EmptyIndex { get; private set; }
         public int boardsize { get; private set; }
         /* Private Class Values */
-        
+
+        public void PushMove(char move)
+        {
+            MoveHistory.Add(move);
+        }
 
         public GameState()
         {
@@ -73,7 +78,14 @@ namespace COMP472_Color_Puzzle
                 Console.WriteLine("+ | {0} | + | {1} | + | {2} | + | {3} | + | {4} | +", TheBoard[(i * 5) + 0], TheBoard[(i * 5) + 1], TheBoard[(i * 5) + 2], TheBoard[(i * 5) + 3], TheBoard[(i * 5) + 4]);
                 Console.WriteLine("+_______________________________________+");
             }
-            Console.WriteLine("+++++++++++++++++++++++++++++++++++++++++");
+            Console.WriteLine("+++++++++++++++++++++++++++++++++++++++++\n\n");
+
+            Console.WriteLine("Move History: ");
+
+            for (int i = 0; i < MoveHistory.Count; ++i)
+            {
+                Console.Write("  {0}   ", MoveHistory[i]);
+            }
         }
     }
 }

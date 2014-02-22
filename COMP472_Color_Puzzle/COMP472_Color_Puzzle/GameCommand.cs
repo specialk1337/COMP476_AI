@@ -21,6 +21,7 @@ namespace COMP472_Color_Puzzle
             if (_currentState.EmptyIndex / (_currentState.boardsize / 3) != 0)
             {
                 _currentState.swap(_currentState.EmptyIndex, _currentState.EmptyIndex - (_currentState.boardsize / 3));
+                _currentState.PushMove('U');
             }
             else
             {
@@ -32,6 +33,7 @@ namespace COMP472_Color_Puzzle
             if (_currentState.EmptyIndex / (_currentState.boardsize / 3) != 2)
             {
                 _currentState.swap(_currentState.EmptyIndex, _currentState.EmptyIndex + (_currentState.boardsize / 3));
+                _currentState.PushMove('D');
             }
             else
             {
@@ -43,6 +45,7 @@ namespace COMP472_Color_Puzzle
             if (_currentState.EmptyIndex % (_currentState.boardsize / 3) != 0)
             {
                 _currentState.swap(_currentState.EmptyIndex, _currentState.EmptyIndex - 1);
+                _currentState.PushMove('L');
             }
             else
             {
@@ -54,6 +57,7 @@ namespace COMP472_Color_Puzzle
             if (_currentState.EmptyIndex % (_currentState.boardsize / 3) != (_currentState.boardsize / 3)-1)
             {
                 _currentState.swap(_currentState.EmptyIndex, _currentState.EmptyIndex +1);
+                _currentState.PushMove('R');
             }
             else
             {

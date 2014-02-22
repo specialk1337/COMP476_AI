@@ -8,6 +8,7 @@ namespace COMP472_Color_Puzzle
 {
     class Program
     {
+        [STAThread]
         static void Main(string[] args)
         {
             GameState state = new GameState();

@@ -3,13 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Windows;
+using System.Windows.Forms;
+
+
 
 namespace COMP472_Color_Puzzle
 {
     class GameIO
     {
+        
         private static List<string> inputList;
 
+        
         public GameIO()
         {
             inputList = new List<string>();
@@ -35,17 +41,19 @@ namespace COMP472_Color_Puzzle
                 case "k":
                     do
                     {
-                    ReadInputFromKeyboard();
-                    Console.WriteLine("Would you like to enter another one? (y/n): ");
+                        ReadInputFromKeyboard();
+                        Console.WriteLine("Would you like to enter another one? (y/n): ");
                     } while (Console.ReadLine() != "n");
                     break;
             }
         }
 
+        [STAThread]
         private void ReadInputFromFile()
         {
-            Console.WriteLine("Reading from default file");
-            string[] file = File.ReadAllLines(GetPath(), Encoding.UTF8); // hardcoded for now
+            string FilePath = GetPath();
+            //Console.WriteLine("Reading from default file");
+            string[] file = File.ReadAllLines(FilePath, Encoding.UTF8); // hardcoded for now
 
             foreach (string startingBoard in file)
             {
@@ -62,7 +70,7 @@ namespace COMP472_Color_Puzzle
             Console.WriteLine("\nPlease enter your inital board configuration, all in one line:");
             string inputString = Console.ReadLine();
             inputList.Add(inputString);
-        } 
+        }
 
         public string ChooseInitialBoard()
         {
@@ -71,7 +79,7 @@ namespace COMP472_Color_Puzzle
             int choice = -1;
             string answer = string.Empty;
             bool done = false;
-            
+
             if (inputList.Count > 0)
             {
                 Console.WriteLine("Which initial configuration would you like to start with?");
@@ -106,9 +114,29 @@ namespace COMP472_Color_Puzzle
         }
 
         // Hard-coded for now to my computer. Do you know how to make stuff relative?
+        [STAThread]
         public static string GetPath()
         {
-            return @"C:\Documents and Settings\dima\My Documents\Visual Studio 2010\Projects\AI\COMP476_AI\COMP472_Color_Puzzle\COMP472_Color_Puzzle\IoFiles\sample-input1.txt";
+            string filePath;
+                        
+            OpenFileDialog browseFile = new OpenFileDialog();
+            browseFile.Filter = "Text File (*.txt) | *.txt";
+            browseFile.Title = "Browse Sample Input";
+            if (browseFile.ShowDialog() == DialogResult.Cancel)
+                return "null";
+            try
+            {
+                filePath = browseFile.FileName;
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Error opening file", "File Error",
+                MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                filePath = "null";
+            }
+
+            return @filePath;
+
         }
 
     }
