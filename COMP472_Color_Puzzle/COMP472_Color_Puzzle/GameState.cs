@@ -22,12 +22,9 @@ namespace COMP472_Color_Puzzle
         public GameState()
         {
             //boardsize = DEBUG_BOARD_INFO.Length;
-            BuildBoard(DEBUG_BOARD_INFO);
+            GameIO input = new GameIO();
+            BuildBoard(input.ChooseInitialBoard());
 
-            /*
-                TO-DO
-             * Write logic to loac the board info from a file, then call builder with new info.
-             */
         }
 
         public GameState(string Board_info)
