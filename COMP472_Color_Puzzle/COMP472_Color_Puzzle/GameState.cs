@@ -17,6 +17,8 @@ namespace COMP472_Color_Puzzle
         public int moveCounter { get; private set; }
         public int EmptyIndex { get; private set; }
         public int boardsize { get; private set; }
+        public StringBuilder Moves;
+
         /* Private Class Values */
 
         public void PushMove(char move)
@@ -29,7 +31,7 @@ namespace COMP472_Color_Puzzle
             //boardsize = DEBUG_BOARD_INFO.Length;
             GameIO input = new GameIO();
             BuildBoard(input.ChooseInitialBoard());
-
+            Moves = new StringBuilder();
         }
 
         public GameState(string Board_info)
@@ -61,6 +63,7 @@ namespace COMP472_Color_Puzzle
             TheBoard[index2] = swap;
             ++moveCounter;
             EmptyIndex = index2;
+            Moves.Append((char)(index2 + 65)); //ASCI value of A
         }
 
         public char GetChip(int index)
@@ -80,11 +83,18 @@ namespace COMP472_Color_Puzzle
             }
             Console.WriteLine("+++++++++++++++++++++++++++++++++++++++++\n\n");
 
-            Console.WriteLine("Move History: ");
+            //Console.WriteLine("Move History: ");
 
-            for (int i = 0; i < MoveHistory.Count; ++i)
+            //for (int i = 0; i < MoveHistory.Count; ++i)
+            //{
+            //    Console.Write("  {0}   ", MoveHistory[i]);
+            //}
+
+            Console.WriteLine("Move History: ");
+            string history = Moves.ToString() + ' ';
+            foreach (char moveChar in history)
             {
-                Console.Write("  {0}   ", MoveHistory[i]);
+                Console.Write(moveChar);
             }
         }
     }

@@ -5,7 +5,6 @@ using System.Text;
 
 namespace COMP472_Color_Puzzle
 {
-
     public class Constants
     {
     }

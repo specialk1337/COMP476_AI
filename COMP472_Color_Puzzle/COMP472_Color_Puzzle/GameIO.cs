@@ -6,16 +6,12 @@ using System.IO;
 using System.Windows;
 using System.Windows.Forms;
 
-
-
 namespace COMP472_Color_Puzzle
 {
     class GameIO
     {
-        
         private static List<string> inputList;
 
-        
         public GameIO()
         {
             inputList = new List<string>();
@@ -52,8 +48,7 @@ namespace COMP472_Color_Puzzle
         private void ReadInputFromFile()
         {
             string FilePath = GetPath();
-            //Console.WriteLine("Reading from default file");
-            string[] file = File.ReadAllLines(FilePath, Encoding.UTF8); // hardcoded for now
+            string[] file = File.ReadAllLines(FilePath, Encoding.UTF8);
 
             foreach (string startingBoard in file)
             {
@@ -66,10 +61,20 @@ namespace COMP472_Color_Puzzle
 
         private void ReadInputFromKeyboard()
         {
-            // they said that we do not need to validate input. I'll add it just in case for next build
-            Console.WriteLine("\nPlease enter your inital board configuration, all in one line:");
-            string inputString = Console.ReadLine();
-            inputList.Add(inputString);
+            Console.WriteLine("\nPlease enter your inital board configuration, all in one line.");
+            Console.WriteLine("Make sure to include 1 'e':");
+            string inputString;
+            do
+            {
+                inputString = Console.ReadLine();
+                if (ValidateInput(ref inputString))
+                {
+                    Console.WriteLine("Added successfully.");
+                    inputList.Add(inputString);
+                }
+
+            }
+            while (inputList.Count < 1);
         }
 
         public string ChooseInitialBoard()
@@ -105,15 +110,13 @@ namespace COMP472_Color_Puzzle
             }
             else
             {
-                Console.WriteLine("Oops! No initial board configurations are available.");
+                Console.WriteLine("No initial board configurations are available.");
                 ReadInputFromKeyboard();
                 returnString = inputList[0];
             }
-
             return returnString;
         }
 
-        // Hard-coded for now to my computer. Do you know how to make stuff relative?
         [STAThread]
         public static string GetPath()
         {
@@ -139,5 +142,120 @@ namespace COMP472_Color_Puzzle
 
         }
 
+        private static bool ValidateInput(ref string boardToTest)
+        {
+            Dictionary<char, int> Chars = new Dictionary<char,int>();
+
+            bool eCharFound = false;
+            bool isValidLevel = false;
+            int charCount = 0;
+            StringBuilder formattedString = new StringBuilder();
+
+            foreach (char inputChar in boardToTest)
+            {
+                if (char.IsLetter(inputChar))
+                {
+                    switch (inputChar)
+                    {
+                        case 'r': case 'b': case 'w': case 'y': case 'g': case 'p':
+                            IncrementCharCount(Chars, inputChar);
+                            charCount++;
+                            formattedString.Append(inputChar + " ");
+                            break;
+
+                        case 'e':
+                            if (!eCharFound)
+                            {
+                                eCharFound = true;
+                                IncrementCharCount(Chars, inputChar);
+                                charCount++;
+                                formattedString.Append(inputChar + " ");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Input string contains more than 1 'e'.");
+                                return false;
+                            }
+                            break;
+
+                        default:
+                            Console.WriteLine(" '" + inputChar + "' is not a valid character.");
+                            Console.WriteLine("Please use 'r', 'b', 'w', 'y', 'g', 'p', and 'e' only.");
+                            return false;
+                    }
+                }
+            }
+
+            if (charCount != 15)
+            {
+                Console.WriteLine("Incorrect number of characters entered.");
+                Console.WriteLine("A board must contain 15 characters, and you've entered " + charCount);
+                return false;
+             }
+
+            if (Chars.ContainsKey('r') && Chars.ContainsKey('b') && Chars.ContainsKey('w'))
+            {
+                if (Chars['r'] == 6)
+                {
+                    // Level 1: 6 red + 6 blue + 2 white
+                    if (Chars['b'] == 6 && Chars['w'] == 2)
+                    {
+                        isValidLevel = true;
+                    }
+                    // Level 2: 6 red + 4 blue + 2 white + 2 yellow
+                    else if (Chars.ContainsKey('y') && Chars['b'] == 4 && Chars['w'] == 2 && Chars['y'] == 2)
+                    {
+                        isValidLevel = true;
+                    }
+                }
+                else if (Chars['r'] == 4 && Chars.ContainsKey('y') && Chars.ContainsKey('g'))
+                {
+                    // Level 3: 4 red + 4 blue + 2 white + 2 yellow + 2 green
+                    if (Chars['b'] == 4 && Chars['w'] == 2 && Chars['y'] == 2 && Chars['g'] == 2)
+                    {
+                        isValidLevel = true;
+                    }
+                    // Level 4: 4 red + 2 blue + 2 white + 2 yellow + 2 green + 2 pink
+                    else if (Chars.ContainsKey('p') && Chars['b'] == 2 && Chars['w'] == 2 &&
+                             Chars['y'] == 2 && Chars['g'] == 2 && Chars['p'] == 2)
+                    {
+                        isValidLevel = true;
+                    }
+                }
+            }
+
+            if (isValidLevel && eCharFound)
+            {
+                boardToTest = formattedString.ToString().TrimEnd();
+                return true;
+            }
+            else if (!eCharFound)
+            {
+                Console.WriteLine("No 'e' was entered.");
+                return false;
+            }
+            else
+            {
+                Console.WriteLine("Level configuration is invalid. Must conform to 1 of the following:");
+                Console.WriteLine("Level 1: 6 red + 6 blue + 2 white OR");
+                Console.WriteLine("Level 2: 6 red + 4 blue + 2 white + 2 yellow OR");
+                Console.WriteLine("Level 3: 4 red + 4 blue + 2 white + 2 yellow + 2 green OR");
+                Console.WriteLine("Level 4: 4 red + 2 blue + 2 white + 2 yellow + 2 green + 2 pink OR");
+                Console.WriteLine("--- and of course, include 1 'e' ---");
+                return false;
+            }
+        }
+
+        private static void IncrementCharCount(Dictionary<char, int> charCount, char charToAdd)
+        {
+            if (charCount.ContainsKey(charToAdd))
+            {
+                charCount[charToAdd]++;
+            }
+            else
+            {
+                charCount.Add(charToAdd, 1);
+            }
+        }
     }
 }

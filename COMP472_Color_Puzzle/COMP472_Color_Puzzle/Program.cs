@@ -14,8 +14,13 @@ namespace COMP472_Color_Puzzle
             GameState state = new GameState();
             GameCommand command = new GameCommand(state);
             PlayerView view = new PlayerView(command);
-
+            
             view.play();
+
+            //Hardcoded
+            TextWriter output = File.CreateText(@"C:\output.txt");
+            output.WriteLine(state.Moves.ToString());
+            output.Close();
         }
     }
 }
