@@ -16,6 +16,11 @@ namespace COMP472_Color_Puzzle
             _currentState = currentState;
         }
 
+        public GameState getState()
+        {
+            return _currentState;
+        }
+
         public void MoveUp()
         {
             if (_currentState.EmptyIndex / (_currentState.boardsize / 3) != 0)

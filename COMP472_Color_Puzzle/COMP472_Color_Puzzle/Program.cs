@@ -13,8 +13,9 @@ namespace COMP472_Color_Puzzle
         {
             GameState state = new GameState();
             GameCommand command = new GameCommand(state);
-            PlayerView view = new PlayerView(command);
-            
+            //PlayerView view = new PlayerView(command);
+            AIView view = new AIView(command);
+
             view.play();
 
             //Hardcoded

@@ -11,9 +11,12 @@ namespace COMP472_Color_Puzzle
     class PlayerView
     {
         private GameCommand _command;
+        GameIO input;
+
         public PlayerView(GameCommand command)
         {
             _command = command;
+            input = new GameIO();
         }
 
         public bool getKeyPress()

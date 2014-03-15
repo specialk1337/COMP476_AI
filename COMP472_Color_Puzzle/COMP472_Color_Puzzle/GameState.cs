@@ -29,8 +29,7 @@ namespace COMP472_Color_Puzzle
         public GameState()
         {
             //boardsize = DEBUG_BOARD_INFO.Length;
-            GameIO input = new GameIO();
-            BuildBoard(input.ChooseInitialBoard());
+
             Moves = new StringBuilder();
         }
 
@@ -40,7 +39,7 @@ namespace COMP472_Color_Puzzle
             BuildBoard(Board_info);
         }
 
-        private void BuildBoard(string Board_Info)
+        public void BuildBoard(string Board_Info)
         {
             EmptyIndex = -1;
             /*remove all spaces*/
@@ -55,6 +54,8 @@ namespace COMP472_Color_Puzzle
             }
             if (EmptyIndex == -1) {/* Possible error checking, no empty chip in board */ }
         }
+
+        
 
         public void swap(int index1, int index2)
         {
