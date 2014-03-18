@@ -11,8 +11,6 @@ namespace COMP472_Color_Puzzle
     class GameIO
     {
         private static List<string> inputList;
-        private bool AIplayer;
-        private int currentEval = 0;
 
         public GameIO()
         {
@@ -44,39 +42,6 @@ namespace COMP472_Color_Puzzle
                     } while (Console.ReadLine() != "n");
                     break;
             }
-
-            Console.WriteLine("Great! now would you like to play the game, or see how fast the Computer can solve the puzzle? ");
-            Console.WriteLine("Press 'A' for AI ");
-            Console.WriteLine("Press 'P' for Player ");
-
-            do
-            {
-                answer = Console.ReadLine();
-                done = (answer != "a") || (answer != "p");
-                if (!done)
-                {
-                    Console.WriteLine("Oops! Try again.");
-                }
-            } while (!done);
-
-            AIplayer = (answer == "a") ? true : false;
-        }
-
-        public bool AIMode()
-        {
-            return AIplayer;
-        }
-
-        public string nextBoard()
-        {
-            currentEval++;
-            return inputList[currentEval-1];
-        }
-        public bool moreBoards()
-        {
-            if (inputList.Count == currentEval)
-                return false;
-            return true;
         }
 
         [STAThread]
@@ -172,7 +137,9 @@ namespace COMP472_Color_Puzzle
                 MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 filePath = "null";
             }
+
             return @filePath;
+
         }
 
         private static bool ValidateInput(ref string boardToTest)

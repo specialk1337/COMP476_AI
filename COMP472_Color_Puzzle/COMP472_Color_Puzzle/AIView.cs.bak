@@ -12,8 +12,6 @@ namespace COMP472_Color_Puzzle
 
         private Dictionary<char, string> legalMoves;
 
-        private bool DEBUG_MODE = true;
-
         //removed for now
         //private Dictionary<string, int> closedList;
         //private PriorityQueue<BoardToScore> openList;
@@ -28,26 +26,18 @@ namespace COMP472_Color_Puzzle
             legalMoves.Add('l', string.Empty);
             legalMoves.Add('r', string.Empty);
         }
-
         public void play()
         {
             string initialState = _state.ToString();
-            string lastMoveString = string.Empty;
             char bestMove = 'n'; // 'n' means no move, 'u', 'd', 'l', 'r' are self-explanatory ;-)
             int bestMoveValue = (int)score(initialState);
             int currentMoveValue = 0;
 
-            if (DEBUG_MODE)
-            _command.Draw();
             // Debugging:
-            if (DEBUG_MODE)
             Console.WriteLine("Initial state: {0} score: {1}", initialState, bestMoveValue);
             
-
             while (true)
             {
-                if (DEBUG_MODE)
-                _command.Draw();
                 // if puzzle is solved
                 if (_command.VerifyBoard())
                 {
@@ -64,32 +54,27 @@ namespace COMP472_Color_Puzzle
                     {
                         continue;
                     }
-
-                    if (!string.IsNullOrEmpty(lastMoveString) && legalMoves[move] == lastMoveString)
-                        continue;
                     
                     // if move solves puzzle, exit
-                    //if (legalMoves[move].EndsWith("WIN"))
-                    //{
-                    //    legalMoves[move] = legalMoves[move].Substring(0, legalMoves[move].IndexOf("WIN"));
-                    //    bestMove = move;
-                    //    bestMoveValue = 1000000;
-                    //    break;
-                    //}
+                    if (legalMoves[move].EndsWith("WIN"))
+                    {
+                        legalMoves[move] = legalMoves[move].Substring(0, legalMoves[move].IndexOf("WIN"));
+                        bestMove = move;
+                        bestMoveValue = 1000000;
+                        break;
+                    }
 
                     currentMoveValue = (int)score(legalMoves[move]);
-                    if (currentMoveValue >= bestMoveValue)
+                    if (currentMoveValue > bestMoveValue)
                     {
                         bestMoveValue = currentMoveValue;
                         bestMove = move;
                     }
 
-                    if(DEBUG_MODE)
-                    Console.WriteLine("Considering option ({0}): {1} , score: {2}", move, legalMoves[move], currentMoveValue);
+                    // Debugging:
+                    Console.WriteLine("Current option ({0}): {1} , score: {2}", move, legalMoves[move], currentMoveValue);
                 }
 
-                lastMoveString = _command.getState().ToString();
-                
                 switch (bestMove)
                 {
                     case 'u':
@@ -108,15 +93,12 @@ namespace COMP472_Color_Puzzle
                         Console.WriteLine("FAILURE");
                         return;
                 }
-                
+
                 // clean-up
-                
                 currentMoveValue = bestMoveValue;
                 bestMove = 'n';
-                bestMoveValue = 0;
 
-                if(DEBUG_MODE)
-                    Console.ReadKey();
+                Console.ReadKey();
             }
         }
 
@@ -124,10 +106,9 @@ namespace COMP472_Color_Puzzle
         {
             string possibleMove;
 
-            _state.ActualMove = false;
             if (_command.MoveUp())
             {
-                possibleMove = _state.ToString();
+                possibleMove = _command.VerifyBoard() ? _state.ToString() + "WIN" : _state.ToString();
                 legalMoves['u'] = possibleMove;
                 _command.MoveDown();
             }
@@ -138,7 +119,7 @@ namespace COMP472_Color_Puzzle
 
             if (_command.MoveDown())
             {
-                possibleMove = _state.ToString();
+                possibleMove = _command.VerifyBoard() ? _state.ToString() + "WIN" : _state.ToString();
                 legalMoves['d'] = possibleMove;
                 _command.MoveUp();
             }
@@ -149,7 +130,7 @@ namespace COMP472_Color_Puzzle
 
             if (_command.MoveLeft())
             {
-                possibleMove = _state.ToString();
+                possibleMove = _command.VerifyBoard() ? _state.ToString() + "LWIN" : _state.ToString();
                 legalMoves['l'] = possibleMove;
                 _command.MoveRight();
             }
@@ -160,7 +141,7 @@ namespace COMP472_Color_Puzzle
 
             if (_command.MoveRight())
             {
-                possibleMove = _state.ToString();
+                possibleMove = _command.VerifyBoard() ? _state.ToString() + "RWIN" : _state.ToString();
                 legalMoves['r'] = possibleMove;
                 _command.MoveLeft();
             }
@@ -168,7 +149,6 @@ namespace COMP472_Color_Puzzle
             {
                 legalMoves['r'] = string.Empty;
             }
-            _state.ActualMove = true;
         }
 
         private float score(String Board_Info)
@@ -179,7 +159,7 @@ namespace COMP472_Color_Puzzle
             string data = Board_Info.Replace(" ", string.Empty);
             int boardsize = data.Length;
 
-            if (_command.VerifyBoard(Board_Info))
+            if (_command.VarifyBoard())
                 return MaxScore;
             if (boardsize % 3 != 0)
             {
@@ -187,10 +167,8 @@ namespace COMP472_Color_Puzzle
                 return 0;
             }
 
-            bool[] ColSolved = new bool[5];
             for (int i = 0; i != boardsize/3; ++i)
             {
-                
                 if (boardsize == 3)
                 {
                     currentScore += (data[0] == data[2]) ? 2000 : 0;
@@ -207,8 +185,7 @@ namespace COMP472_Color_Puzzle
                 // top row [i] == bottom row [i]
                 if (data[i] == data[i + 2 * factoredBoardSize])
                 {
-                    currentScore += 2005;
-                    ColSolved[i] = true;
+                    currentScore += 2000;
                 }
 
                 // top row [i] == middle row [i]
@@ -216,10 +193,10 @@ namespace COMP472_Color_Puzzle
                 {
                     currentScore += 5;
                     
-                    // and bottom row [i] == 'e'
+                    // and middle row [i] == 'e'
                     if (data[i + 2 * factoredBoardSize] == 'e')
                     {
-                        currentScore += 995;
+                        currentScore += 1500;
                     }
                 }
 
@@ -231,7 +208,7 @@ namespace COMP472_Color_Puzzle
                     // and top row [i]
                     if(data[i] == 'e')
                     {
-                        currentScore +=995;
+                        currentScore +=1500;
                     }
                 }
 
@@ -243,28 +220,28 @@ namespace COMP472_Color_Puzzle
                     // top row [i] == bottom row [i] + 1 (to the right), and bottom row [i] == 'e'
                     if (data[i] == data[i + 2 * factoredBoardSize + 1] && data[i + 2 * factoredBoardSize] =='e' )
                     {
-                        currentScore+=999;
+                        currentScore+=1500;
                     }
                     // middle row [i] == bottom row [i] and top row[i] == 'e'
                     else if ( data[i +1 ] == data[i + 2 * factoredBoardSize] && data[i] =='e')
                     {
-                        currentScore+=999;
+                        currentScore+=1500;
                     }
                 }
 
-                // Last row
+                // first of middle row [i]
                 else if (i == factoredBoardSize -1)
                 {
                     // on the right side
                     // middle row [i] == bottom row [i] - 1 (to the left) and bottom row [i] == 'e'
                     if (data[i] == data[i + 2 * factoredBoardSize -1] && data[i + 2 * factoredBoardSize] =='e' )
                     {
-                        currentScore+=999;
+                        currentScore+=1500;
                     }
                     // ??? rightmost top row == bottom row [i] and first of middle row == 'e'
                     if (data[i - 1] == data[i + 2 * factoredBoardSize] && data[i] =='e')
                     {
-                        currentScore+=999;
+                        currentScore+=1500;
                     }
                 }
 
@@ -273,36 +250,28 @@ namespace COMP472_Color_Puzzle
                     // top row [i] == bottom row [i] - 1 (to the left) and bottom row [i] == 'e'
                     if (data[i] == data[i + 2 * factoredBoardSize - 1] && data[i + 2 * factoredBoardSize] =='e' )
                     {
-                        currentScore+=999;
+                        currentScore+=1500;
                     }
 
                     // top row [i] + 1 (to the right) == bottom row [i] and top row [i] == 'e'
                     if (data[i + 1] == data[i + 2 * factoredBoardSize] && data[i] =='e')
                     {
-                        currentScore+=999;
+                        currentScore+=1500;
                     }
 
                     // on the right side
                     // top row [i] == bottom row [i] - 1 (to the left) and bottom row [i] == 'e'
                     if (data[i] == data[i + 2 * factoredBoardSize - 1] && data[i + 2 * factoredBoardSize] =='e' )
                     {
-                        currentScore+=999;
+                        currentScore+=1500;
                     }
 
                     // top row [i] - 1 (to the left) == bottom row [i]  and top row [i] == 'e'
                     else if (data[i - 1] == data[i + 2 * factoredBoardSize] && data[i] =='e')
                     {
-                        currentScore+=999;
+                        currentScore+=1500;
                     }
                 }
-            }
-
-            /* Give a weight to moveing closer to unsolved col */
-            int eCol = _state.EmptyIndex / 3;
-            for (int i = 0; i != 5; ++i)
-            {
-                if (!ColSolved[i])
-                    currentScore += Math.Abs(i - eCol) * 10;
             }
 
             return currentScore;

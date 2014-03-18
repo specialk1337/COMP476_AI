@@ -43,11 +43,10 @@ namespace COMP472_Color_Puzzle
             return true;
             //Console.WriteLine("you pressed {0}", keyPress.Key);
         }
-
         public void play()
         {
             _command.Draw();
-            while (!_command.VerifyBoard())
+            while (!_command.VarifyBoard())
             {
                 if (getKeyPress())
                     _command.Draw();
@@ -58,8 +57,8 @@ namespace COMP472_Color_Puzzle
             Console.WriteLine("You won! it took you {0} moves", _command.getMoveCount());
 
             Console.ReadKey();
+            
         }
-
         public void draw()
         {
             
