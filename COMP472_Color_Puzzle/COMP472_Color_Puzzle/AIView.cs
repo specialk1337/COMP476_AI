@@ -178,6 +178,8 @@ namespace COMP472_Color_Puzzle
 
             string data = Board_Info.Replace(" ", string.Empty);
             int boardsize = data.Length;
+            int eCol = 0;
+
 
             if (_command.VerifyBoard(Board_Info))
                 return MaxScore;
@@ -202,12 +204,17 @@ namespace COMP472_Color_Puzzle
 
                 int factoredBoardSize = boardsize / 3;
 
+                if (data[i] == 'e' ||
+                    data[i + 1 * factoredBoardSize] == 'e' ||
+                    data[i + 2 * factoredBoardSize] == 'e')
+                    eCol = i;
+
                 /* Score the column*/
 
                 // top row [i] == bottom row [i]
                 if (data[i] == data[i + 2 * factoredBoardSize])
                 {
-                    currentScore += 2005;
+                    currentScore += 2100;
                     ColSolved[i] = true;
                 }
 
@@ -298,11 +305,11 @@ namespace COMP472_Color_Puzzle
             }
 
             /* Give a weight to moveing closer to unsolved col */
-            int eCol = _state.EmptyIndex / 3;
+            
             for (int i = 0; i != 5; ++i)
             {
                 if (!ColSolved[i])
-                    currentScore += Math.Abs(i - eCol) * 10;
+                    currentScore += 80 - (Math.Abs(i - eCol) * 10);
             }
 
             return currentScore;
