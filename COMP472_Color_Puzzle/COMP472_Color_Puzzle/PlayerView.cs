@@ -11,12 +11,10 @@ namespace COMP472_Color_Puzzle
     class PlayerView
     {
         private GameCommand _command;
-        GameIO input;
-
+        
         public PlayerView(GameCommand command)
         {
             _command = command;
-            input = new GameIO();
         }
 
         public bool getKeyPress()
@@ -53,21 +51,10 @@ namespace COMP472_Color_Puzzle
                     _command.Draw();
             }
             Console.Clear();
-            Console.WriteLine("You won! it took you {0} moves", _command.getMoveCount());
             _command.Draw();
             Console.WriteLine("You won! it took you {0} moves", _command.getMoveCount());
 
             Console.ReadKey();
-        }
-
-        public void draw()
-        {
-            
-            //for (int i = 0; i != 3; i++)
-            //{
-            //    Console.WriteLine("+++++++++++++++++++++++++++++++++");
-                
-            //}
         }
     }
 }

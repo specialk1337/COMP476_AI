@@ -25,6 +25,11 @@ namespace COMP472_Color_Puzzle
 
         /* Private Class Values */
 
+        public string GetMoveHistory()
+        {
+            return moves.ToString();
+        }
+
         public void PushMove(char move)
         {
             MoveHistory.Add(move);

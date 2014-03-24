@@ -10,19 +10,19 @@ namespace COMP472_Color_Puzzle
 {
     class GameIO
     {
-        private static List<string> inputList;
+        public List<string> inputList { get; private set; }
+        public bool BenchmarkMode { get; private set; }
         private bool AIplayer;
-        private int currentEval = 0;
-
+        
         public GameIO()
         {
             inputList = new List<string>();
-            Console.WriteLine("Would you like to enter the input yourself, or read it from a file?");
+            Console.WriteLine("Would you like to enter the input yourself, read it from a file, or use benchmarking?");
             string answer = string.Empty;
             bool done = false;
             do
             {
-                Console.Write("Please enter \'f\' for file and \'k\' for keyboard: ");
+                Console.Write("Please enter 'f' for file, 'k' for keyboard, or 'b' for benchmarking: ");
                 answer = Console.ReadLine();
                 done = (answer != "f") || (answer != "k");
                 if (!done)
@@ -34,7 +34,10 @@ namespace COMP472_Color_Puzzle
             switch (answer)
             {
                 case "f":
-                    ReadInputFromFile();
+                    do
+                    {
+                        ReadInputFromFile();
+                    } while (inputList.Count < 1);
                     break;
                 case "k":
                     do
@@ -43,11 +46,15 @@ namespace COMP472_Color_Puzzle
                         Console.WriteLine("Would you like to enter another one? (y/n): ");
                     } while (Console.ReadLine() != "n");
                     break;
+                case "b":
+                    Benchmark();
+                    BenchmarkMode = true;
+                    AIplayer = true;
+                    return;
             }
 
             Console.WriteLine("Great! now would you like to play the game, or see how fast the Computer can solve the puzzle? ");
-            Console.WriteLine("Press 'A' for AI ");
-            Console.WriteLine("Press 'P' for Player ");
+            Console.Write("Press 'a' for AI or 'p' for Player: ");
 
             do
             {
@@ -67,29 +74,27 @@ namespace COMP472_Color_Puzzle
             return AIplayer;
         }
 
-        public string nextBoard()
-        {
-            currentEval++;
-            return inputList[currentEval-1];
-        }
-        public bool moreBoards()
-        {
-            if (inputList.Count == currentEval)
-                return false;
-            return true;
-        }
-
+        
         [STAThread]
         private void ReadInputFromFile()
         {
             string FilePath = GetPath();
             string[] file = File.ReadAllLines(FilePath, Encoding.UTF8);
+            string boardToTest;
 
             foreach (string startingBoard in file)
             {
                 if (!string.IsNullOrEmpty(startingBoard))
                 {
-                    inputList.Add(startingBoard);
+                    boardToTest = startingBoard;
+                    if (ValidateInput(ref boardToTest))
+                    {
+                        inputList.Add(boardToTest);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Skipping " + boardToTest);
+                    }
                 }
             }
         }
@@ -112,45 +117,45 @@ namespace COMP472_Color_Puzzle
             while (inputList.Count < 1);
         }
 
-        public string ChooseInitialBoard()
-        {
-            string returnString = string.Empty;
-            int index = 0;
-            int choice = -1;
-            string answer = string.Empty;
-            bool done = false;
+        //public string ChooseInitialBoard()
+        //{
+        //    string returnString = string.Empty;
+        //    int index = 0;
+        //    int choice = -1;
+        //    string answer = string.Empty;
+        //    bool done = false;
 
-            if (inputList.Count > 0)
-            {
-                Console.WriteLine("Which initial configuration would you like to start with?");
-                foreach (string sBoardConfig in inputList)
-                {
-                    Console.WriteLine("[" + (index++) + "] : " + sBoardConfig);
-                }
-                do
-                {
-                    Console.Write("Please make your choice: ");
-                    answer = Console.ReadLine();
-                    choice = int.Parse(answer);
-                    if (choice >= 0 && choice < index)
-                    {
-                        done = true;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Oops! Try again");
-                    }
-                } while (!done);
-                returnString = inputList[choice];
-            }
-            else
-            {
-                Console.WriteLine("No initial board configurations are available.");
-                ReadInputFromKeyboard();
-                returnString = inputList[0];
-            }
-            return returnString;
-        }
+        //    if (inputList.Count > 0)
+        //    {
+        //        Console.WriteLine("Which initial configuration would you like to start with?");
+        //        foreach (string sBoardConfig in inputList)
+        //        {
+        //            Console.WriteLine("[" + (index++) + "] : " + sBoardConfig);
+        //        }
+        //        do
+        //        {
+        //            Console.Write("Please make your choice: ");
+        //            answer = Console.ReadLine();
+        //            choice = int.Parse(answer);
+        //            if (choice >= 0 && choice < index)
+        //            {
+        //                done = true;
+        //            }
+        //            else
+        //            {
+        //                Console.WriteLine("Oops! Try again");
+        //            }
+        //        } while (!done);
+        //        returnString = inputList[choice];
+        //    }
+        //    else
+        //    {
+        //        Console.WriteLine("No initial board configurations are available.");
+        //        ReadInputFromKeyboard();
+        //        returnString = inputList[0];
+        //    }
+        //    return returnString;
+        //}
 
         [STAThread]
         public static string GetPath()
@@ -289,6 +294,71 @@ namespace COMP472_Color_Puzzle
             {
                 charCount.Add(charToAdd, 1);
             }
+        }
+
+        private void Benchmark()
+        {
+            StringBuilder sbNewBoard = new StringBuilder();
+            Random rand = new Random();
+
+            int i;
+            for (i = 0; i < 50; i++) // 50 in 10 sec
+            {
+                inputList.Add(generateRandomBoard(rand, ref sbNewBoard, 1));
+            }
+
+            for (i = 0; i < 50; i++) // 50 in 12 sec
+            {
+                inputList.Add(generateRandomBoard(rand, ref sbNewBoard, 2));
+            }
+
+            for (i = 0; i < 30; i++) // 30 in 30 sec
+            {
+                inputList.Add(generateRandomBoard(rand, ref sbNewBoard, 3));
+            }
+
+            for (i = 0; i < 10; i++) // 10 in 20 sec
+            {
+                inputList.Add(generateRandomBoard(rand, ref sbNewBoard, 4));
+
+            }
+        }
+
+        private static string generateRandomBoard(Random rand, ref StringBuilder sbNewBoard, int level)
+        {
+            sbNewBoard.Clear();
+            char[] newBoard = null;
+            switch (level)
+            {
+                case 1:
+                    newBoard = new char[] { 'e', 'r', 'r', 'r', 'r', 'r', 'r', 'b', 'b', 'b', 'b', 'b', 'b', 'w', 'w' };
+                    break;
+                case 2:
+                    newBoard = new char[] { 'e', 'r', 'r', 'r', 'r', 'r', 'r', 'b', 'b', 'b', 'b', 'w', 'w', 'y', 'y' };
+                    break;
+                case 3:
+                    newBoard = new char[] { 'e', 'r', 'r', 'r', 'r', 'b', 'b', 'b', 'b', 'w', 'w', 'y', 'y', 'g', 'g' };
+                    break;
+                case 4:
+                    newBoard = new char[] { 'e', 'r', 'r', 'r', 'r', 'b', 'b', 'w', 'w', 'y', 'y', 'g', 'g', 'p', 'p' };
+                    break;
+            }
+
+            int r;
+            char temp;
+            for (int i = 0; i < newBoard.Length; i++)
+            {
+                r = rand.Next(0, i);
+                temp = newBoard[i];
+                newBoard[i] = newBoard[r];
+                newBoard[r] = temp;
+            }
+
+            foreach (char letter in newBoard)
+            {
+                sbNewBoard.Append(letter);
+            }
+            return sbNewBoard.ToString();
         }
     }
 }
