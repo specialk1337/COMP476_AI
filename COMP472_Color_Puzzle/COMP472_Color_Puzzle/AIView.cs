@@ -10,296 +10,326 @@ namespace COMP472_Color_Puzzle
         private GameCommand _command;
         private GameState _state;
         
-        private Dictionary<char, string> legalMoves;
+        //private Dictionary<char, string> legalMoves;
 
-        private bool DEBUG_MODE = true;
+        private bool DEBUG_MODE = false;
 
-        //removed for now
-        private Dictionary<string, int> closedList; // board config to move taken
-        private List<BoardToScore> openList;
-        private Dictionary<string, int> evaluatedSoFar;
+        private Dictionary<string, int> closedList;
+        //private Dictionary<string, BoardToScore> openDict;
+        private SortedList<int, BoardToScore> openList;
         private bool solutionFound = false;
         private static string possibleMoves = "udlr";
+        private string initialBoard;
 
         public AIView(GameCommand command)
         {
             _command = command;
             _state = _command.getState();
             solutionFound = false;
-            legalMoves = new Dictionary<char, string>(4);
-            legalMoves.Add('u', string.Empty);
-            legalMoves.Add('d', string.Empty);
-            legalMoves.Add('l', string.Empty);
-            legalMoves.Add('r', string.Empty);
+            //legalMoves = new Dictionary<char, string>(4);
+            //legalMoves.Add('u', string.Empty);
+            //legalMoves.Add('d', string.Empty);
+            //legalMoves.Add('l', string.Empty);
+            //legalMoves.Add('r', string.Empty);
             closedList = new Dictionary<string, int>();
-            openList = new List<BoardToScore>();
-            evaluatedSoFar = new Dictionary<string, int>();
+            openList = new SortedList<int, BoardToScore>();
+            initialBoard = _state.ToString();
         }
 
-        public void play()
+        public string play()
         {
             bool DmitriChanges = true;
-
-            BoardToScore currentMove = new BoardToScore(_state.ToString(), 0, "");
+            BoardToScore currentMove = new BoardToScore(initialBoard, 0, "");
+            openList.Add(currentMove.value, currentMove);
             
             // remove once DmitriChanges are fully integrated
-            string initialState = _state.ToString();
-            string lastMoveString = string.Empty;
-            char bestMove = 'n';
-            int bestMoveValue = (int)score(initialState);
-            int currentMoveValue = 0;
+            //string initialState = _state.ToString();
+            //string lastMoveString = string.Empty;
+            //char bestMove = 'n';
+            //int bestMoveValue = (int)score(initialState);
+            //int currentMoveValue = 0;
 
             while (true)
             {
+                //if (!DmitriChanges)
+                //{
+                //    if (_command.VerifyBoard())
+                //    {
+                //        if (DEBUG_MODE)
+                //        {
+                //        Console.WriteLine("SUCCESS");
+                //        Console.ReadKey();
+                //        }
+                //        return;
+                //    }
+                //}
+
                 if (DmitriChanges)
                 {
-                    foreach (char direction in currentMove.moves)
+                    if (openList.Count == 0)
                     {
-                        switch (direction)
+                        if (DEBUG_MODE)
                         {
-                            case 'u':
-                                _command.MoveUp();
-                                break;
-                            case 'd':
-                                _command.MoveDown();
-                                break;
-                            case 'l':
-                                _command.MoveLeft();
-                                break;
-                            case 'r':
-                                _command.MoveRight();
-                                break;
+                            Console.WriteLine("FAILURE");
+                            //Console.ReadKey();
                         }
+                        return string.Empty;
                     }
+                    
+                    currentMove = openList.Last().Value;
+                    openList.Remove(currentMove.value);
                     closedList.Add(currentMove.boardConfig, currentMove.value);
-                    currentMove.moves = string.Empty;
-                }
 
-                if (DEBUG_MODE)
-                {
-                    _command.Draw();
-                }
-
-                if (_command.VerifyBoard())
-                {
-                    if (DEBUG_MODE)
+                    if (solutionFound)
                     {
-                    Console.WriteLine("SUCCESS");
-                    Console.ReadKey();
-                    }
-                    return;
-                }
-
-                if (DmitriChanges)
-                {
-                    generateSuccessors(currentMove);
-                    if (openList.Count > 1)
-                    {
-                        openList.Sort();
-                    }
-                    currentMove = openList.Last();
-                    openList.Clear();
-                    evaluatedSoFar.Clear();
-                }
-                
-                else
-                {   // old way of doing things
-                    generateSuccessors();
-
-                    foreach (char move in legalMoves.Keys)
-                    {
-                        // if no legal move exists, go to next move
-                        if (string.IsNullOrEmpty(legalMoves[move]))
+                        foreach (char direction in currentMove.moves)
                         {
-                            continue;
-                        }
-
-                        if (!string.IsNullOrEmpty(lastMoveString) && legalMoves[move] == lastMoveString)
-                            continue;
-
-                        currentMoveValue = (int)score(legalMoves[move]);
-                        if (currentMoveValue >= bestMoveValue)
-                        {
-                            bestMoveValue = currentMoveValue;
-                            bestMove = move;
+                            switch (direction)
+                            {
+                                case 'u':
+                                    _command.MoveUp();
+                                    break;
+                                case 'd':
+                                    _command.MoveDown();
+                                    break;
+                                case 'l':
+                                    _command.MoveLeft();
+                                    break;
+                                case 'r':
+                                    _command.MoveRight();
+                                    break;
+                            }
                         }
 
                         if (DEBUG_MODE)
-                            Console.WriteLine("Considering option ({0}): {1} , score: {2}", move, legalMoves[move], currentMoveValue);
+                        {
+                            _state.Draw();
+                            Console.WriteLine("SUCCESS");
+                            //Console.ReadKey();
+                        }
+                        
+                        return currentMove.moves;
                     }
-
-                    lastMoveString = _command.getState().ToString();
-
-                    switch (bestMove)
-                    {
-                        case 'u':
-                            _command.MoveUp();
-                            break;
-                        case 'd':
-                            _command.MoveDown();
-                            break;
-                        case 'l':
-                            _command.MoveLeft();
-                            break;
-                        case 'r':
-                            _command.MoveRight();
-                            break;
-                        case 'n':
-                            Console.WriteLine("FAILURE");
-                            return;
-                    }
-
-                    // clean-up
-
-                    currentMoveValue = bestMoveValue;
-                    bestMove = 'n';
-                    bestMoveValue = 0;
+                    generateSuccessors(currentMove);
                 }
+                //else
+                //{   // old way of doing things
+                //    generateSuccessors();
 
-                if (DEBUG_MODE)
-                {
-                    Console.ReadKey();
-                }
+                //    foreach (char move in legalMoves.Keys)
+                //    {
+                //        // if no legal move exists, go to next move
+                //        if (string.IsNullOrEmpty(legalMoves[move]))
+                //        {
+                //            continue;
+                //        }
+
+                //        if (!string.IsNullOrEmpty(lastMoveString) && legalMoves[move] == lastMoveString)
+                //            continue;
+
+                //        currentMoveValue = (int)score(legalMoves[move]);
+                //        if (currentMoveValue >= bestMoveValue)
+                //        {
+                //            bestMoveValue = currentMoveValue;
+                //            bestMove = move;
+                //        }
+
+                //        if (DEBUG_MODE)
+                //        {
+                //            Console.WriteLine("Considering option ({0}): {1} , score: {2}", move, legalMoves[move], currentMoveValue);
+                //        }
+                //    }
+
+                //    lastMoveString = _command.getState().ToString();
+
+                //    switch (bestMove)
+                //    {
+                //        case 'u':
+                //            _command.MoveUp();
+                //            break;
+                //        case 'd':
+                //            _command.MoveDown();
+                //            break;
+                //        case 'l':
+                //            _command.MoveLeft();
+                //            break;
+                //        case 'r':
+                //            _command.MoveRight();
+                //            break;
+                //        case 'n':
+                //            Console.WriteLine("FAILURE");
+                //            return;
+                //    }
+
+                //    // clean-up
+
+                //    currentMoveValue = bestMoveValue;
+                //    bestMove = 'n';
+                //    bestMoveValue = 0;
+                //}
+
+                //if (DEBUG_MODE)
+                //{
+                //    Console.ReadKey();
+                //}
             }
         }
 
         private void generateSuccessors(BoardToScore current)
         {
             _state.ActualMove = false;
-            
+            _state.BuildBoard(current.boardConfig);
+
+            if (DEBUG_MODE)
+                _state.Draw();
+
+            char justCameFrom = ' ';
+            if (current.moves.Length > 0)
+            {
+                switch (current.moves.Last())
+                {
+                    case 'u':
+                        justCameFrom = 'd';
+                        break;
+                    case 'd':
+                        justCameFrom = 'u';
+                        break;
+                    case 'l':
+                        justCameFrom = 'r';
+                        break;
+                    case 'r':
+                        justCameFrom = 'l';
+                        break;
+                }
+            }
+
+            bool toContinue;
+            string currentBoard;
+            int currentBoardValue;
             foreach (char direction in possibleMoves)
             {
-                evaluateMove(current, direction);
-
-                if (solutionFound)
+                toContinue = (direction == justCameFrom);
+                
+                if (!toContinue)
                 {
-                    break;
-                }
-            }
-            _state.ActualMove = true;
-        }
-
-        private void evaluateMove(BoardToScore current, char direction)
-        {
-            string possibleMove;
-            int possibleMoveScore;
-
-            switch (direction)
-            {
-                case 'u':
-                    if (!_command.MoveUp())
-                        return;
-                    break;
-                case 'd':
-                    if (!_command.MoveDown())
-                        return;
-                    break;
-                case 'l':
-                    if (!_command.MoveLeft())
-                        return;
-                    break;
-                case 'r':
-                    if (!_command.MoveRight())
-                        return;
-                    break;
-            }
-
-            possibleMove = _state.ToString();
-            if (!evaluatedSoFar.ContainsKey(possibleMove)) // to optimize
-            {
-                possibleMoveScore = score(possibleMove);
-
-                if (DEBUG_MODE)
-                {
-                    Console.WriteLine("direction: {0}, board: {1}, score: {2}", direction, possibleMove, possibleMoveScore);
+                    switch (direction)
+                    {
+                        case 'u':
+                            toContinue = !_command.MoveUp();
+                            break;
+                        case 'd':
+                            toContinue = !_command.MoveDown();
+                            break;
+                        case 'l':
+                            toContinue = !_command.MoveLeft();
+                            break;
+                        case 'r':
+                            toContinue = !_command.MoveRight();
+                            break;
+                    }
                 }
 
-
-                if (possibleMoveScore == 25000)
+                if (toContinue)
                 {
-                    solutionFound = true;
-                    openList.Clear();
+                    continue;
                 }
                 else
                 {
-                    evaluatedSoFar.Add(current.boardConfig + direction, possibleMoveScore);
-                }
+                    currentBoard = _state.ToString();
+                    if (!closedList.ContainsKey(currentBoard))
+                    {
+                        currentBoardValue = score(currentBoard);
+                        if (currentBoardValue == 25000)
+                        {
+                            openList.Clear();
+                            solutionFound = true;
+                            openList.Add(currentBoardValue, new BoardToScore(currentBoard, currentBoardValue, current.moves + direction));
+                            _state.BuildBoard(initialBoard);
+                            break;
+                        }
 
-                if (!closedList.ContainsKey(possibleMove))
-                {
-                    openList.Add(new BoardToScore(possibleMove, possibleMoveScore, current.moves + direction));
+                        if (!openList.ContainsKey(currentBoardValue))
+                        {
+                            BoardToScore temp = new BoardToScore(currentBoard, currentBoardValue, current.moves + direction);
+                            openList.Add(currentBoardValue, temp);
+                        }
+                        else
+                        {
+                            if (openList[currentBoardValue].boardConfig == currentBoard && openList[currentBoardValue].moves == current.moves + direction)
+                            {
+                                // don't care
+                            }
+                            else
+                            {
+                                // Investigat
+                            }
+                        }
+                        
+                        if (DEBUG_MODE)
+                        {
+                            _state.Draw();
+                            Console.WriteLine("moves: {0} score: {1} direction: {2} movesCounters: {3}",
+                                              current.moves + direction, currentBoardValue, direction, current.moves.Length + 1);
+                        }
+                        _state.BuildBoard(current.boardConfig);
+                    }
                 }
             }
-
-            switch (direction)
-            {
-                case 'u':
-                    _command.MoveDown();
-                    break;
-                case 'd':
-                    _command.MoveUp();
-                    break;
-                case 'l':
-                    _command.MoveRight();
-                    break;
-                case 'r':
-                    _command.MoveLeft();
-                    break;
-            }
+            _state.ActualMove = true;
         }
 
 // OLD CODE:
 //===============================================================================
-        private void generateSuccessors()
-        {
-            string possibleMove;
-            _state.ActualMove = false;
+        //private void generateSuccessors()
+        //{
+        //    string possibleMove;
+        //    _state.ActualMove = false;
             
-            if (_command.MoveUp())
-            {
-                possibleMove = _state.ToString();
-                legalMoves['u'] = possibleMove;
-                _command.MoveDown();
-            }
-            else
-            {
-                legalMoves['u'] = string.Empty;
-            }
+        //    if (_command.MoveUp())
+        //    {
+        //        possibleMove = _state.ToString();
+        //        legalMoves['u'] = possibleMove;
+        //        _command.MoveDown();
+        //    }
+        //    else
+        //    {
+        //        legalMoves['u'] = string.Empty;
+        //    }
 
-            if (_command.MoveDown())
-            {
-                possibleMove = _state.ToString();
-                legalMoves['d'] = possibleMove;
-                _command.MoveUp();
-            }
-            else
-            {
-                legalMoves['d'] = string.Empty;
-            }
+        //    if (_command.MoveDown())
+        //    {
+        //        possibleMove = _state.ToString();
+        //        legalMoves['d'] = possibleMove;
+        //        _command.MoveUp();
+        //    }
+        //    else
+        //    {
+        //        legalMoves['d'] = string.Empty;
+        //    }
 
-            if (_command.MoveLeft())
-            {
-                possibleMove = _state.ToString();
-                legalMoves['l'] = possibleMove;
-                _command.MoveRight();
-            }
-            else
-            {
-                legalMoves['l'] = string.Empty;
-            }
+        //    if (_command.MoveLeft())
+        //    {
+        //        possibleMove = _state.ToString();
+        //        legalMoves['l'] = possibleMove;
+        //        _command.MoveRight();
+        //    }
+        //    else
+        //    {
+        //        legalMoves['l'] = string.Empty;
+        //    }
 
-            if (_command.MoveRight())
-            {
-                possibleMove = _state.ToString();
-                legalMoves['r'] = possibleMove;
-                _command.MoveLeft();
-            }
-            else
-            {
-                legalMoves['r'] = string.Empty;
-            }
-            _state.ActualMove = true;
-        }
+        //    if (_command.MoveRight())
+        //    {
+        //        possibleMove = _state.ToString();
+        //        legalMoves['r'] = possibleMove;
+        //        _command.MoveLeft();
+        //    }
+        //    else
+        //    {
+        //        legalMoves['r'] = string.Empty;
+        //    }
+        //    _state.ActualMove = true;
+        //}
 //===============================================================================
 
         private int score(String Board_Info)

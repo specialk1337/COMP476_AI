@@ -44,6 +44,7 @@ namespace COMP472_Color_Puzzle
 
         public void play()
         {
+            _command.getState().ActualMove = true;
             _command.Draw();
             while (!_command.VerifyBoard())
             {

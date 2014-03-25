@@ -21,8 +21,7 @@ namespace COMP472_Color_Puzzle
         public int boardsize { get; private set; }
         private StringBuilder moves;
         private StringBuilder currentState;
-        private int currentEval;
-
+        
         /* Private Class Values */
 
         public string GetMoveHistory()
@@ -39,7 +38,6 @@ namespace COMP472_Color_Puzzle
         {
             currentState = new StringBuilder();
             moves = new StringBuilder();
-            currentEval = 0;
         }
 
         public GameState(string Board_info)

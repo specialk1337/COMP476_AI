@@ -13,11 +13,26 @@ namespace COMP472_Color_Puzzle
         static void Main(string[] args)
         {
             GameIO IO = new GameIO();
+            StringBuilder output = new StringBuilder();
+            StringBuilder unsolvedBoards = new StringBuilder();
+            StringBuilder stats = null;
+
+            string solution = string.Empty;
             string outputFile = string.Empty;
+            long totalMoves = 0;
+            long totalMs = 0;
+            long ms = 0;
+
+            long levelTotalMs = 0;
+            long levelTotalMoves = 0;
+            int solvedPuzzlesCounter = 0;
+            bool unableToSolve = false;
 
             if (IO.BenchmarkMode)
             {
-                // a whole lot of code to take the number of the last bench file and create a new one
+                stats = new StringBuilder();
+
+                // a whole lot of code to take the number of the last bench file and create a new one that is 1 number more
                 string[] benchFiles = Directory.GetFiles(Directory.GetCurrentDirectory());
                 for (int i = 0; i < benchFiles.Length - 1; i++)
                 {
@@ -31,7 +46,6 @@ namespace COMP472_Color_Puzzle
                     }
                 }
                 
-                benchFiles = null;
                 if (string.IsNullOrEmpty(outputFile))
                 {
                     outputFile = "bench1.txt";
@@ -46,12 +60,6 @@ namespace COMP472_Color_Puzzle
                 }
             }
 
-            StringBuilder output = new StringBuilder();
-            StringBuilder unsolvedBoards = new StringBuilder();
-            long totalMoves = 0;
-            long totalMs = 0;
-            int solvedPuzzlesCounter = 0;
-
             for (int i = 0; i < IO.inputList.Count; i++ )
             {
                 GameState state = new GameState(IO.inputList[i]);
@@ -61,44 +69,102 @@ namespace COMP472_Color_Puzzle
                 {
                     AIView AIview = new AIView(command);
 
+                    if (IO.BenchmarkMode)
+                    {
+                        output.AppendLine("\r\n" + IO.inputList[i]);
+                        output.AppendLine("===============");
+                    }
+
                     Stopwatch sw = Stopwatch.StartNew();
                     try
                     {
-                        AIview.play();
+                        solution = AIview.play();
                         ++solvedPuzzlesCounter;
                     }
                     catch (Exception e)
                     {
-                        unsolvedBoards.AppendLine(IO.inputList[i]);
+                        unableToSolve = true;
                     }
                     
                     sw.Stop();
+                    ms = sw.ElapsedMilliseconds;
 
-                    output.AppendLine(state.GetMoveHistory());
-                    output.AppendLine(sw.ElapsedMilliseconds.ToString() + "ms");
-                    totalMoves += state.OptimalCounter;
-                    totalMs += sw.ElapsedMilliseconds;
+                    if (unableToSolve)
+                    {
+                        unsolvedBoards.AppendLine(IO.inputList[i]);
+                        unableToSolve = false;
+                        if (IO.BenchmarkMode)
+                        {
+                            output.AppendLine("=== Unable to solve ===");
+                        }
+                    }
 
                     if (IO.BenchmarkMode)
                     {
+                        output.AppendLine(solution);
+                        output.AppendLine(solution.Length.ToString() + " moves");
+                    }
+                    else
+                    {
+                        output.AppendLine(state.GetMoveHistory());
+                        if (state.GetMoveHistory().Length != solution.Length)
+                        {
+
+                        }
+                    }
+                    output.AppendLine(ms.ToString() + "ms");
+                    totalMoves += solution.Length;
+                    totalMs += ms;
+
+                    if (IO.BenchmarkMode)
+                    {
+                        levelTotalMoves += solution.Length;
+                        levelTotalMs += ms;
+
                         if (i == 49)
                         {
-                            output.AppendLine("===== Solved " + solvedPuzzlesCounter + " / 50 Level 1 puzzles =====");
+                            stats.AppendLine("===== Solved " + solvedPuzzlesCounter + " / 50 Level 1 puzzles =====");
+                            stats.AppendLine("Total level 1 moves: " + levelTotalMoves);
+                            stats.AppendLine("Total level 1 ms: " + levelTotalMs);
+                            stats.AppendLine("Average moves per puzzle: " + levelTotalMoves / 50.0);
+                            stats.AppendLine("Average time per puzzle: " + levelTotalMs / 50.0 + "ms\r\n");
                             solvedPuzzlesCounter = 0;
+                            levelTotalMoves = 0;
+                            levelTotalMs = 0;
                         }
                         else if (i == 99)
                         {
-                            output.AppendLine("===== Solved " + solvedPuzzlesCounter + " / 50 Level 2 puzzles =====");
+                            stats.AppendLine("===== Solved " + solvedPuzzlesCounter + " / 50 Level 2 puzzles =====");
+                            stats.AppendLine("Total level 2 moves: " + levelTotalMoves);
+                            stats.AppendLine("Total level 2 ms: " + levelTotalMs);
+                            stats.AppendLine("Average moves per puzzle: " + levelTotalMoves / 50.0);
+                            stats.AppendLine("Average time per puzzle: " + levelTotalMs / 50.0 + "ms\r\n");
                             solvedPuzzlesCounter = 0;
+                            levelTotalMoves = 0;
+                            levelTotalMs = 0;
                         }
                         else if (i == 129)
                         {
-                            output.AppendLine("===== Solved " + solvedPuzzlesCounter + " / 30 Level 3 puzzles =====");
+                            stats.AppendLine("===== Solved " + solvedPuzzlesCounter + " / 30 Level 3 puzzles =====");
+                            stats.AppendLine("Total level 3 moves: " + levelTotalMoves);
+                            stats.AppendLine("Total level 3 ms: " + levelTotalMs);
+                            stats.AppendLine("Average moves per puzzle: " + levelTotalMoves / 30.0);
+                            stats.AppendLine("Average time per puzzle: " + levelTotalMs / 30.0 + "ms\r\n");
                             solvedPuzzlesCounter = 0;
+                            levelTotalMoves = 0;
+                            levelTotalMs = 0;
                         }
                         else if (i == 139)
                         {
-                            output.AppendLine("===== Solved " + solvedPuzzlesCounter + " / 10 Level 4 puzzles =====");
+                            stats.AppendLine("===== Solved " + solvedPuzzlesCounter + " / 10 Level 4 puzzles =====");
+                            stats.AppendLine("Total level 4 moves: " + levelTotalMoves);
+                            stats.AppendLine("Total level 4 ms: " + levelTotalMs);
+                            stats.AppendLine("Average moves per puzzle: " + levelTotalMoves / 10.0);
+                            stats.AppendLine("Average time per puzzle: " + levelTotalMs / 10.0 + "ms\r\n");
+                            stats.AppendLine("===== Overall stats: =====");
+                            stats.AppendLine("Total moves: " + totalMoves);
+                            stats.AppendLine("Total ms: " + totalMs);
+                            stats.AppendLine();
                         }
                     }
                 }
@@ -130,8 +196,16 @@ namespace COMP472_Color_Puzzle
 
             if (IO.AIMode())
             {
-                output.AppendLine(totalMoves.ToString());
-                output.AppendLine(totalMs.ToString() + "ms");
+                if (!IO.BenchmarkMode)
+                {
+                    output.AppendLine(totalMoves.ToString());
+                    output.AppendLine(totalMs.ToString() + "ms");
+                }
+                else
+                {
+                    File.AppendAllText(outputFile, stats.ToString());
+                }
+
                 File.AppendAllText(outputFile, output.ToString());
                 File.AppendAllText("unsolved.txt", unsolvedBoards.ToString());
             }
