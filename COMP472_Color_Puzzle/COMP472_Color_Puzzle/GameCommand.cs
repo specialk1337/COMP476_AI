@@ -29,14 +29,9 @@ namespace COMP472_Color_Puzzle
             if (_currentState.EmptyIndex / (_currentState.boardsize / 3) != 0)
             {
                 _currentState.swap(_currentState.EmptyIndex, _currentState.EmptyIndex - (_currentState.boardsize / 3));
-                //    _currentState.PushMove('U');
                 return true;
             }
-            else
-            {
-                /* Cannot swap up, empty chip is in top row */
-                return false;
-            }
+            return false;
         }
 
         public bool MoveDown()
@@ -44,14 +39,9 @@ namespace COMP472_Color_Puzzle
             if (_currentState.EmptyIndex / (_currentState.boardsize / 3) != 2)
             {
                 _currentState.swap(_currentState.EmptyIndex, _currentState.EmptyIndex + (_currentState.boardsize / 3));
-                //    _currentState.PushMove('D');
                 return true;
             }
-            else
-            {
-                /* Cannot swap down, empty chip is in bottom row */
-                return false;
-            }
+            return false;
         }
 
         public bool MoveLeft()
@@ -59,14 +49,9 @@ namespace COMP472_Color_Puzzle
             if (_currentState.EmptyIndex % (_currentState.boardsize / 3) != 0)
             {
                 _currentState.swap(_currentState.EmptyIndex, _currentState.EmptyIndex - 1);
-                //    _currentState.PushMove('L');
                 return true;
             }
-            else
-            {
-                /* Cannot swap left */
-                return false;
-            }
+            return false;
         }
 
         public bool MoveRight()
@@ -74,14 +59,9 @@ namespace COMP472_Color_Puzzle
             if (_currentState.EmptyIndex % (_currentState.boardsize / 3) != (_currentState.boardsize / 3) - 1)
             {
                 _currentState.swap(_currentState.EmptyIndex, _currentState.EmptyIndex + 1);
-                //    _currentState.PushMove('R');
                 return true;
             }
-            else
-            {
-                /* Cannot swap Right */
-                return false;
-            }
+            return false;
         }
 
         public void Draw()
@@ -89,28 +69,34 @@ namespace COMP472_Color_Puzzle
             _currentState.Draw();
         }
 
-        public bool VerifyBoard()
+        public bool VerifyBoard(string boardConfig)
         {
-            for (int i = 0; i != _currentState.boardsize / 3; ++i)
-            { 
-                if(_currentState.GetChip(i) != _currentState.GetChip(i + 2 *(_currentState.boardsize / 3)))
-                    return false;
-            }
-            return true;
-        }
-        public bool VerifyBoard(string possibleBoard)
-        {
-
-            string data = possibleBoard.Replace(" ", string.Empty);
-            int boardsize = data.Length;
+            int boardsize = boardConfig.Length;
             for (int i = 0; i != boardsize / 3; ++i)
             {
-                if (data[i] != data[i + 2 * boardsize / 3])
+                if (boardConfig[i] != boardConfig[i + 2 * boardsize / 3])
                 {
                     return false;
                 }
             }
             return true;
+        }
+
+        public string Draw(ref StringBuilder sbMoveTracer)
+        {
+            string TheBoard = _currentState.ToString();
+            sbMoveTracer.AppendLine("+++++++++++++++++++++++++++++++++++++++++\r\n");
+            for (int i = 0; i != 3; ++i)
+            {
+                sbMoveTracer.AppendLine("+_______________________________________+");
+                sbMoveTracer.AppendFormat("+ | {0} | + | {1} | + | {2} | + | {3} | + | {4} | +\r\n",
+                    TheBoard[(i * 5) + 0], TheBoard[(i * 5) + 1], TheBoard[(i * 5) + 2],
+                    TheBoard[(i * 5) + 3], TheBoard[(i * 5) + 4]);
+                sbMoveTracer.AppendLine("+_______________________________________+");
+            }
+            sbMoveTracer.AppendLine("+++++++++++++++++++++++++++++++++++++++++\r\n");
+
+            return sbMoveTracer.ToString();
         }
     }
 }

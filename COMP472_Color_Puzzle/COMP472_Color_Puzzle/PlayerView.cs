@@ -39,20 +39,22 @@ namespace COMP472_Color_Puzzle
                     return false;
             }
             return true;
-            //Console.WriteLine("you pressed {0}", keyPress.Key);
         }
 
         public void play()
         {
-            _command.getState().ActualMove = true;
+            GameState state = _command.getState();
+            state.ActualMove = true;
             _command.Draw();
-            while (!_command.VerifyBoard())
+            
+            while (!_command.VerifyBoard(state.ToString()))
             {
                 if (getKeyPress())
                     _command.Draw();
             }
-            Console.Clear();
+
             _command.Draw();
+            Console.WriteLine();
             Console.WriteLine("You won! it took you {0} moves", _command.getMoveCount());
 
             Console.ReadKey();

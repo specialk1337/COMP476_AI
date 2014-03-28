@@ -12,8 +12,13 @@ namespace COMP472_Color_Puzzle
     {
         public List<string> inputList { get; private set; }
         public bool BenchmarkMode { get; private set; }
-        private bool AIplayer;
-        
+        public bool AIplayer { get; private set; }
+        public bool trace { get; private set; }
+        private int gameCounter;
+        private StringBuilder sbNewBoard;
+        private StringBuilder sbMoveTracer;
+        private Random rand;
+
         public GameIO()
         {
             inputList = new List<string>();
@@ -24,29 +29,37 @@ namespace COMP472_Color_Puzzle
             {
                 Console.Write("Please enter 'f' for file, 'k' for keyboard, or 'b' for benchmarking: ");
                 answer = Console.ReadLine();
-                done = (answer != "f") || (answer != "k");
+                done = (answer.StartsWith("f")) || (answer.StartsWith("k")) || (answer.StartsWith("b"));
                 if (!done)
                 {
                     Console.WriteLine("Oops! Try again.");
                 }
             } while (!done);
 
-            switch (answer)
+            trace = answer.Contains('t');
+            sbMoveTracer = trace ? new StringBuilder() : null;
+            gameCounter = 0;
+
+            switch (answer[0])
             {
-                case "f":
+                case 'f':
                     do
                     {
                         ReadInputFromFile();
                     } while (inputList.Count < 1);
                     break;
-                case "k":
+                case 'k':
+                    sbNewBoard = new StringBuilder();
+                    rand = new Random();
                     do
                     {
                         ReadInputFromKeyboard();
-                        Console.WriteLine("Would you like to enter another one? (y/n): ");
+                        Console.WriteLine("Would you like to enter more boards? (y/n): ");
                     } while (Console.ReadLine() != "n");
                     break;
-                case "b":
+                case 'b':
+                    sbNewBoard = new StringBuilder();
+                    rand = new Random();
                     Benchmark();
                     BenchmarkMode = true;
                     AIplayer = true;
@@ -102,60 +115,49 @@ namespace COMP472_Color_Puzzle
         private void ReadInputFromKeyboard()
         {
             Console.WriteLine("\nPlease enter your inital board configuration, all in one line.");
-            Console.WriteLine("Make sure to include 1 'e':");
+            Console.WriteLine("Make sure to include one 'e'.");
+            Console.WriteLine("Otherwise, you may type '1', '2', '3', '4' to generate a random level.");
             string inputString;
             do
             {
                 inputString = Console.ReadLine();
-                if (ValidateInput(ref inputString))
+                if (inputString.Contains('1') || inputString.Contains('2') ||
+                    inputString.Contains('3') || inputString.Contains('4'))
                 {
+                    foreach (char level in inputString)
+                    {
+                        switch (level)
+                        {
+                            case '1':
+                                inputList.Add(generateRandomBoard(1));
+                                break;
+                            case '2':
+                                inputList.Add(generateRandomBoard(2));
+                                break;
+                            case '3':
+                                inputList.Add(generateRandomBoard(3));
+                                break;
+                            case '4':
+                                inputList.Add(generateRandomBoard(4));
+                                break;
+                            default:
+                                continue;
+                        }
+                        Console.WriteLine("Added successfully.");
+                    }
+                }
+                else
+                {
+                    if (ValidateInput(ref inputString))
+                    {
                     Console.WriteLine("Added successfully.");
                     inputList.Add(inputString);
+                    }
                 }
 
             }
             while (inputList.Count < 1);
         }
-
-        //public string ChooseInitialBoard()
-        //{
-        //    string returnString = string.Empty;
-        //    int index = 0;
-        //    int choice = -1;
-        //    string answer = string.Empty;
-        //    bool done = false;
-
-        //    if (inputList.Count > 0)
-        //    {
-        //        Console.WriteLine("Which initial configuration would you like to start with?");
-        //        foreach (string sBoardConfig in inputList)
-        //        {
-        //            Console.WriteLine("[" + (index++) + "] : " + sBoardConfig);
-        //        }
-        //        do
-        //        {
-        //            Console.Write("Please make your choice: ");
-        //            answer = Console.ReadLine();
-        //            choice = int.Parse(answer);
-        //            if (choice >= 0 && choice < index)
-        //            {
-        //                done = true;
-        //            }
-        //            else
-        //            {
-        //                Console.WriteLine("Oops! Try again");
-        //            }
-        //        } while (!done);
-        //        returnString = inputList[choice];
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine("No initial board configurations are available.");
-        //        ReadInputFromKeyboard();
-        //        returnString = inputList[0];
-        //    }
-        //    return returnString;
-        //}
 
         [STAThread]
         public static string GetPath()
@@ -198,7 +200,7 @@ namespace COMP472_Color_Puzzle
                         case 'r': case 'b': case 'w': case 'y': case 'g': case 'p':
                             IncrementCharCount(Chars, inputChar);
                             charCount++;
-                            formattedString.Append(inputChar + " ");
+                            formattedString.Append(inputChar);
                             break;
 
                         case 'e':
@@ -207,7 +209,7 @@ namespace COMP472_Color_Puzzle
                                 eCharFound = true;
                                 IncrementCharCount(Chars, inputChar);
                                 charCount++;
-                                formattedString.Append(inputChar + " ");
+                                formattedString.Append(inputChar);
                             }
                             else
                             {
@@ -264,7 +266,7 @@ namespace COMP472_Color_Puzzle
 
             if (isValidLevel && eCharFound)
             {
-                boardToTest = formattedString.ToString().TrimEnd();
+                boardToTest = formattedString.ToString();
                 return true;
             }
             else if (!eCharFound)
@@ -298,33 +300,30 @@ namespace COMP472_Color_Puzzle
 
         private void Benchmark()
         {
-            StringBuilder sbNewBoard = new StringBuilder();
-            Random rand = new Random();
-
             int i;
             for (i = 0; i < 50; i++) // 50 in 10 sec
             {
-                inputList.Add(generateRandomBoard(rand, ref sbNewBoard, 1));
+                inputList.Add(generateRandomBoard(1));
             }
 
             for (i = 0; i < 50; i++) // 50 in 12 sec
             {
-                inputList.Add(generateRandomBoard(rand, ref sbNewBoard, 2));
+                inputList.Add(generateRandomBoard(2));
             }
 
             for (i = 0; i < 30; i++) // 30 in 30 sec
             {
-                inputList.Add(generateRandomBoard(rand, ref sbNewBoard, 3));
+                inputList.Add(generateRandomBoard(3));
             }
 
             for (i = 0; i < 10; i++) // 10 in 20 sec
             {
-                inputList.Add(generateRandomBoard(rand, ref sbNewBoard, 4));
+                inputList.Add(generateRandomBoard(4));
 
             }
         }
 
-        private static string generateRandomBoard(Random rand, ref StringBuilder sbNewBoard, int level)
+        private string generateRandomBoard(int level)
         {
             sbNewBoard.Clear();
             char[] newBoard = null;
@@ -359,6 +358,54 @@ namespace COMP472_Color_Puzzle
                 sbNewBoard.Append(letter);
             }
             return sbNewBoard.ToString();
+        }
+
+        public string Draw(GameCommand _command, string moves)
+        {
+            GameState _state = _command.getState();
+            if (trace)
+            {
+                sbMoveTracer.Clear();
+                sbMoveTracer.AppendLine("\r\n==================================================\r\n");
+                sbMoveTracer.AppendLine("Game " + ++gameCounter);
+                _command.Draw(ref sbMoveTracer);
+            }
+            
+            for (int i = 0 ; i < moves.Length; i++)
+            {
+                switch (moves[i])
+                {
+                    case 'u':
+                        _command.MoveUp();
+                        break;
+                    case 'd':
+                        _command.MoveDown();
+                        break;
+                    case 'l':
+                        _command.MoveLeft();
+                        break;
+                    case 'r':
+                        _command.MoveRight();
+                        break;
+                }
+
+                if (trace)
+                {
+                    _command.Draw(ref sbMoveTracer);
+                    for (int j = 0; j <= i; j++)
+                        sbMoveTracer.Append(moves[j]);
+                    sbMoveTracer.AppendLine();
+                }
+            }
+
+            if (trace)
+                sbMoveTracer.AppendLine(moves.Length.ToString() + " moves");
+            return _command.getState().GetMoveHistory();
+        }
+
+        public string GetTrace()
+        {
+            return (trace) ? sbMoveTracer.ToString() : string.Empty;
         }
     }
 }

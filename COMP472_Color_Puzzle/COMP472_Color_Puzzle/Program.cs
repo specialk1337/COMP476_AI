@@ -14,8 +14,10 @@ namespace COMP472_Color_Puzzle
         {
             GameIO IO = new GameIO();
             StringBuilder output = new StringBuilder();
-            StringBuilder unsolvedBoards = new StringBuilder();
+            StringBuilder unsolvedBoards = null;
             StringBuilder stats = null;
+            StringBuilder trace = IO.trace ? new StringBuilder() : null;
+            Stopwatch sw = new Stopwatch() ;
 
             string solution = string.Empty;
             string outputFile = string.Empty;
@@ -26,7 +28,6 @@ namespace COMP472_Color_Puzzle
             long levelTotalMs = 0;
             long levelTotalMoves = 0;
             int solvedPuzzlesCounter = 0;
-            bool unableToSolve = false;
 
             if (IO.BenchmarkMode)
             {
@@ -75,30 +76,31 @@ namespace COMP472_Color_Puzzle
                         output.AppendLine("===============");
                     }
 
-                    Stopwatch sw = Stopwatch.StartNew();
-                    try
-                    {
-                        solution = AIview.play();
-                        ++solvedPuzzlesCounter;
-                    }
-                    catch (Exception e)
-                    {
-                        unableToSolve = true;
-                    }
-                    
+                    sw.Reset();
+                    sw.Start();
+                    solution = AIview.play();
                     sw.Stop();
                     ms = sw.ElapsedMilliseconds;
 
-                    if (unableToSolve)
+                    if (string.IsNullOrEmpty(solution))
                     {
+                        if (unsolvedBoards == null)
+                        {
+                            unsolvedBoards = new StringBuilder();
+                        }
+
                         unsolvedBoards.AppendLine(IO.inputList[i]);
-                        unableToSolve = false;
+
                         if (IO.BenchmarkMode)
                         {
                             output.AppendLine("=== Unable to solve ===");
                         }
                     }
-
+                    else
+                    {
+                        solvedPuzzlesCounter++;
+                    }
+                    
                     if (IO.BenchmarkMode)
                     {
                         output.AppendLine(solution);
@@ -106,12 +108,17 @@ namespace COMP472_Color_Puzzle
                     }
                     else
                     {
-                        output.AppendLine(state.GetMoveHistory());
-                        if (state.GetMoveHistory().Length != solution.Length)
-                        {
-
-                        }
+                        command.getState().ActualMove = true;
+                        output.AppendLine(IO.Draw(command, solution));
                     }
+
+                    if (IO.trace)
+                    {
+                        command.getState().ActualMove = true;
+                        IO.Draw(command, solution);
+                        trace.Append(IO.GetTrace());
+                    }
+
                     output.AppendLine(ms.ToString() + "ms");
                     totalMoves += solution.Length;
                     totalMs += ms;
@@ -167,6 +174,10 @@ namespace COMP472_Color_Puzzle
                             stats.AppendLine();
                         }
                     }
+                    
+                    state = null;
+                    command = null;
+                    AIview = null;
                 }
                 else
                 {
@@ -207,7 +218,20 @@ namespace COMP472_Color_Puzzle
                 }
 
                 File.AppendAllText(outputFile, output.ToString());
-                File.AppendAllText("unsolved.txt", unsolvedBoards.ToString());
+
+                if (unsolvedBoards != null)
+                {
+                    File.AppendAllText("unsolved.txt", unsolvedBoards.ToString());
+                }
+
+                if (IO.trace)
+                {
+                    if (File.Exists("game_trace.txt"))
+                    {
+                        File.Delete("game_trace.txt");
+                    }
+                    File.AppendAllText("game_trace.txt", trace.ToString());
+                }
             }
             else
             {

@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AIView.cs" />
+    <Compile Include="BoardToScore.cs" />
     <Compile Include="GameIO.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="GameCommand.cs" />
