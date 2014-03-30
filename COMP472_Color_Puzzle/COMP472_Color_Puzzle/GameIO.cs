@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.IO;
 using System.Windows;
 using System.Windows.Forms;
@@ -10,11 +11,12 @@ namespace COMP472_Color_Puzzle
 {
     class GameIO
     {
-        public List<string> inputList { get; private set; }
-        public bool BenchmarkMode { get; private set; }
-        public bool AIplayer { get; private set; }
-        public bool trace { get; private set; }
-        private int gameCounter;
+        public List<string> inputList   { get; private set; }
+        public bool BenchmarkMode       { get; private set; }
+        public bool AIplayer            { get; private set; }
+        public bool Trace               { get; private set; }
+        public bool Report              { get; private set; }
+
         private StringBuilder sbNewBoard;
         private StringBuilder sbMoveTracer;
         private Random rand;
@@ -22,12 +24,15 @@ namespace COMP472_Color_Puzzle
         public GameIO()
         {
             inputList = new List<string>();
-            Console.WriteLine("Would you like to enter the input yourself, read it from a file, or use benchmarking?");
+            Console.WriteLine("Would you like to enter the input manually, read it from a file, or use benchmarking?");
             string answer = string.Empty;
             bool done = false;
             do
             {
-                Console.Write("Please enter 'f' for file, 'k' for keyboard, or 'b' for benchmarking: ");
+                Console.WriteLine("Press 'f' for file, 'k' for keyboard, or 'b' for benchmarking.");
+                Console.WriteLine("Options:");
+                Console.WriteLine("-'t'\t traces every move (works in AI only): ");
+                Console.WriteLine("-'r'\t generates a statistics (enable by default in benchmarking)");
                 answer = Console.ReadLine();
                 done = (answer.StartsWith("f")) || (answer.StartsWith("k")) || (answer.StartsWith("b"));
                 if (!done)
@@ -36,10 +41,10 @@ namespace COMP472_Color_Puzzle
                 }
             } while (!done);
 
-            trace = answer.Contains('t');
-            sbMoveTracer = trace ? new StringBuilder() : null;
-            gameCounter = 0;
-
+            Trace = answer.Contains('t');
+            sbMoveTracer = Trace ? new StringBuilder() : null;
+            Report = answer.Contains('r');
+            
             switch (answer[0])
             {
                 case 'f':
@@ -63,11 +68,11 @@ namespace COMP472_Color_Puzzle
                     Benchmark();
                     BenchmarkMode = true;
                     AIplayer = true;
+                    Report = true;
                     return;
             }
 
-            Console.WriteLine("Great! now would you like to play the game, or see how fast the Computer can solve the puzzle? ");
-            Console.Write("Press 'a' for AI or 'p' for Player: ");
+            Console.Write("Who plays, you or the AI? Press 'a' for AI or 'p' for Player: ");
 
             do
             {
@@ -82,12 +87,6 @@ namespace COMP472_Color_Puzzle
             AIplayer = (answer == "a") ? true : false;
         }
 
-        public bool AIMode()
-        {
-            return AIplayer;
-        }
-
-        
         [STAThread]
         private void ReadInputFromFile()
         {
@@ -124,39 +123,55 @@ namespace COMP472_Color_Puzzle
                 if (inputString.Contains('1') || inputString.Contains('2') ||
                     inputString.Contains('3') || inputString.Contains('4'))
                 {
-                    foreach (char level in inputString)
+                    if (Regex.IsMatch(inputString, @"\d+x\d+"))
                     {
-                        switch (level)
+                    int level = 0;
+                    int times = 0;
+                    
+                        for (Match m = Regex.Match(inputString, @"(\d+)x(\d+)"); m.Success; m = m.NextMatch())
                         {
-                            case '1':
-                                inputList.Add(generateRandomBoard(1));
-                                break;
-                            case '2':
-                                inputList.Add(generateRandomBoard(2));
-                                break;
-                            case '3':
-                                inputList.Add(generateRandomBoard(3));
-                                break;
-                            case '4':
-                                inputList.Add(generateRandomBoard(4));
-                                break;
-                            default:
-                                continue;
+                            level = int.Parse(m.Groups[1].ToString());
+                            times = int.Parse(m.Groups[2].ToString());
+                            for (int i = 0; i < times; i++)
+                                {
+                                inputList.Add(generateRandomBoard(level));
+                                }
                         }
-                        Console.WriteLine("Added successfully.");
+                    }
+                    else
+                    {
+                        foreach (char level in inputString)
+                        {
+                            switch (level)
+                            {
+                                case '1':
+                                    inputList.Add(generateRandomBoard(1));
+                                    break;
+                                case '2':
+                                    inputList.Add(generateRandomBoard(2));
+                                    break;
+                                case '3':
+                                    inputList.Add(generateRandomBoard(3));
+                                    break;
+                                case '4':
+                                    inputList.Add(generateRandomBoard(4));
+                                    break;
+                                default:
+                                    continue;
+                            }
+                        }
                     }
                 }
                 else
                 {
                     if (ValidateInput(ref inputString))
                     {
-                    Console.WriteLine("Added successfully.");
                     inputList.Add(inputString);
                     }
                 }
-
             }
             while (inputList.Count < 1);
+            Console.WriteLine("Added successfully.");
         }
 
         [STAThread]
@@ -276,7 +291,7 @@ namespace COMP472_Color_Puzzle
             }
             else
             {
-                Console.WriteLine("Level configuration is invalid. Must conform to 1 of the following:");
+                Console.WriteLine("Level configuration: {0} is invalid. Must conform to 1 of the following:", boardToTest);
                 Console.WriteLine("Level 1: 6 red + 6 blue + 2 white OR");
                 Console.WriteLine("Level 2: 6 red + 4 blue + 2 white + 2 yellow OR");
                 Console.WriteLine("Level 3: 4 red + 4 blue + 2 white + 2 yellow + 2 green OR");
@@ -360,14 +375,14 @@ namespace COMP472_Color_Puzzle
             return sbNewBoard.ToString();
         }
 
-        public string Draw(GameCommand _command, string moves)
+        public string Draw(GameCommand _command, string moves, int gameCounter)
         {
             GameState _state = _command.getState();
-            if (trace)
+            if (Trace)
             {
                 sbMoveTracer.Clear();
                 sbMoveTracer.AppendLine("\r\n==================================================\r\n");
-                sbMoveTracer.AppendLine("Game " + ++gameCounter);
+                sbMoveTracer.AppendLine("Game " + (gameCounter + 1));
                 _command.Draw(ref sbMoveTracer);
             }
             
@@ -389,7 +404,7 @@ namespace COMP472_Color_Puzzle
                         break;
                 }
 
-                if (trace)
+                if (Trace)
                 {
                     _command.Draw(ref sbMoveTracer);
                     for (int j = 0; j <= i; j++)
@@ -398,14 +413,15 @@ namespace COMP472_Color_Puzzle
                 }
             }
 
-            if (trace)
+            if (Trace)
                 sbMoveTracer.AppendLine(moves.Length.ToString() + " moves");
+
             return _command.getState().GetMoveHistory();
         }
 
         public string GetTrace()
         {
-            return (trace) ? sbMoveTracer.ToString() : string.Empty;
+            return (Trace) ? sbMoveTracer.ToString() : string.Empty;
         }
     }
 }

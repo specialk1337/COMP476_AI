@@ -8,7 +8,7 @@ namespace COMP472_Color_Puzzle
     class GameState
     {
 
-        List<char> TheBoard = new List<char>();
+        List<char> TheBoard = new List<char>(new char[15]);
         
         public int moveCounter { get; private set; }
         public int EmptyIndex { get; private set; }
@@ -82,5 +82,10 @@ namespace COMP472_Color_Puzzle
 
             Console.Write("Move History: " + moves.ToString());
         }
+
+        public void ClearMoveHistroy()
+            {
+            moves.Clear();
+            }
     }
 }

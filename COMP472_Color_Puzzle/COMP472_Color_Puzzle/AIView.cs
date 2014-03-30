@@ -7,26 +7,29 @@ namespace COMP472_Color_Puzzle
 {
     class AIView
     {
+        public static bool UsedIgnoredList = false;
         private static readonly string possibleMoves = "udlr";
-        
+        public static List<string> ignoredBoards;
+
         private GameCommand _command;
         private GameState _state;
         private Dictionary<string, int> closedList;
         private SortedList<int, BoardToScore> openList;
-        private Dictionary<BoardToScore, int> ignoredList;
-
+        private SortedList<BoardToScore, string> ignoredList;
+        
         private bool solutionFound = false;
+        private bool addedToIgnored = false;
         private readonly string initialBoard;
 
         public AIView(GameCommand command)
         {
             _command = command;
             _state = _command.getState();
-            solutionFound = false;
-            closedList = new Dictionary<string, int>();
-            openList = new SortedList<int, BoardToScore>();
-            ignoredList = new Dictionary<BoardToScore, int>();
+            closedList = new Dictionary<string, int>(50);
+            openList = new SortedList<int, BoardToScore>(50);
+            ignoredList = new SortedList<BoardToScore, string>(30);
             initialBoard = _state.ToString();
+            solutionFound = command.VerifyBoard(initialBoard);
         }
 
         public string play()
@@ -38,29 +41,39 @@ namespace COMP472_Color_Puzzle
             {
                 if (openList.Count == 0)
                 {
-                    if (ignoredList.Count == 0)
-                        return string.Empty;
-                    else
-                    {
-                        foreach (BoardToScore temp in ignoredList.Keys)
+                    UsedIgnoredList = true;
+                    if (ignoredBoards == null)
                         {
-                            if (!closedList.ContainsKey(temp.boardConfig))
-                            {
-                                openList.Add(temp.value, temp);
-                                ignoredList.Remove(temp);
-                            }
+                        ignoredBoards = new List<string>();
                         }
+                    if (!addedToIgnored)
+                    {
+                        ignoredBoards.Add(initialBoard);
                     }
-                }
+                    addedToIgnored = true;
 
-                if (solutionFound)
-                {
-                    return currentMove.moves;
+                    do
+                        {
+                        BoardToScore temp = ignoredList.Last().Key;
+                        ignoredList.Remove(temp);
+                        if (!closedList.ContainsKey(temp.boardConfig))
+                            {
+                            openList.Add(temp.value, temp);
+                            }
+                        } while (openList.Count < 1 && ignoredList.Count > 0);
+                
+                if (openList.Count < 1 && ignoredList.Count == 0)
+                        return string.Empty;
                 }
 
                 currentMove = openList.Last().Value;
                 openList.Remove(currentMove.value);
                 closedList.Add(currentMove.boardConfig, currentMove.value);
+
+                if (solutionFound)
+                    {
+                    return currentMove.moves;
+                    }
 
                 generateSuccessors(currentMove);
             }
@@ -72,7 +85,7 @@ namespace COMP472_Color_Puzzle
             BoardToScore temp = null;
             string currentBoard;
             int currentBoardValue;
-            char justCameFrom = ' '; // to avoid evaluating the square
+            char justCameFrom = ' ';
             bool toContinue;
 
             if (current.moves.Length > 0)
@@ -144,14 +157,9 @@ namespace COMP472_Color_Puzzle
                         }
                         else
                         {
-                            if (openList[currentBoardValue].moves.Length > (current.moves + direction).Length)
+                            if (!ignoredList.ContainsKey(temp))
                             {
-                                ignoredList.Add(openList[currentBoardValue], currentBoardValue);
-                                openList[currentBoardValue] = temp;
-                            }
-                            else
-                            {
-                                ignoredList.Add(temp, currentBoardValue);
+                                ignoredList.Add(temp, temp.moves);
                             }
                         }
 
@@ -177,14 +185,6 @@ namespace COMP472_Color_Puzzle
             bool[] ColSolved = new bool[5];
             for (int i = 0; i != factoredBoardSize; ++i)
             {
-                if (boardsize == 3)
-                {
-                    currentScore += (data[0] == data[2]) ? 2000 : 0;
-                    currentScore += (data[0] == data[1] && data[2] == 'e') ? 1500 : 0;
-                    currentScore += (data[1] == data[2] && data[0] == 'e') ? 1500 : 0;
-                    return currentScore;
-                }
-
                 if ((data[i] == 'e')                            ||
                     (data[i + middleRowOffset] == 'e')    ||
                     (data[i + bottomRowOffset] == 'e'))
