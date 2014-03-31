@@ -72,7 +72,7 @@ namespace COMP472_Color_Puzzle
 
                 if (solutionFound)
                     {
-                    return currentMove.moves;
+                    return !string.IsNullOrEmpty(currentMove.moves) ? currentMove.moves : " " ;
                     }
 
                 generateSuccessors(currentMove);

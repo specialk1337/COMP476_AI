@@ -92,8 +92,8 @@ namespace COMP472_Color_Puzzle
                     }
                     else
                     {
-                        moves = solution.Length;
-                    
+                        moves = (string.IsNullOrEmpty(solution) || solution == " ") ? 0 : solution.Length;
+
                         if (IO.Report)
                             {
                             levelStats[level].totalNbMs += ms;
@@ -109,7 +109,14 @@ namespace COMP472_Color_Puzzle
                         else
                         {
                             state.ActualMove = true;
-                            output.AppendLine(IO.Draw(command, solution, i));
+                            if (string.IsNullOrEmpty(solution) || solution == " ")
+                            {
+                                output.AppendLine();
+                            }
+                            else
+                            {
+                                output.AppendLine(IO.Draw(command, solution, i));
+                            }
                             state.ActualMove = false;
                         }
 
